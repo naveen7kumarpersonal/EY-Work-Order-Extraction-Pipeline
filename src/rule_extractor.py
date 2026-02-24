@@ -89,6 +89,26 @@ def _extract_header(full_text: str, kvps: Dict[str, str]) -> Dict[str, str]:
         _find(r'Order\s+Ceiling\s+Value\s*:\s*([\d,]+(?:\.\d+)?)\s*INR', full_text)
         or _find(r'Order\s+Ceiling\s+Value\s*:\s*([\d,]+(?:\.\d+)?)', full_text)
     )
+    # Fax Number
+    h["Fax No"] = (
+            two_col.get("Fax No")
+            or _kvp_get(kvps, "fax")
+            or _find(r'Fax\s*No\.?\s*:-?\s*([\d+\-\s()]+)', full_text)
+    )
+
+    # Contract Details / Contract Number
+    h["Contact Details"] = (
+            two_col.get("Contact Details")
+            or _kvp_get(kvps, "contact")
+            or _find(r'Contact\s+(?:No\.?|Number)\s*:-?\s*([A-Z0-9\/\-]+)', full_text)
+    )
+    # Phone Number
+    h["Phone No"] = (
+            two_col.get("Phone No")
+            or _kvp_get(kvps, "phone", "mobile", "contact no")
+            or _find(r'Phone\s*No\.?\s*:-?\s*([\+\d][\d\s\-\(\)]{7,20})', full_text)
+    )
+
 
     return {k: v for k, v in h.items() if v}
 
@@ -192,6 +212,7 @@ def _extract_pricing(full_text: str) -> Dict[str, str]:
         r'TOTAL\s+ORDER\s+VALUE\s+PAYABLE[^:]*:\s*([\d,]+(?:\.\d+)?)\s*INR', full_text, flags=re.I
     )
 
+
     return {k: v for k, v in p.items() if v}
 
 
@@ -247,6 +268,15 @@ def _extract_text_blocks(full_text: str) -> Dict[str, str]:
     )
     if pym:
         blocks["Payment Terms Detail"] = re.sub(r'\s+', ' ', re.sub(r'\s*\|\s*', ' ', pym.group(1))).strip()[:1500]
+
+    # Description (General)
+    desc = _find(
+        r'(?:Description|Subject|Work\s+Description)\s*:?[\s|]*(.*?)(?=\|\s*(?:Order|Payment|Scope|Diesel))',
+        full_text,
+        flags=re.I | re.DOTALL
+    )
+    if desc:
+        blocks["Description"] = re.sub(r'\s+', ' ', desc).strip()[:1500]
 
     return {k: v for k, v in blocks.items() if v}
 

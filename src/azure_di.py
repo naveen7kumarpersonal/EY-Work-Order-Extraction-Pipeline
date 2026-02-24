@@ -14,8 +14,8 @@ from azure.core.credentials import AzureKeyCredential
 from azure.ai.documentintelligence import DocumentIntelligenceClient
 from azure.ai.documentintelligence.models import (
     AnalyzeResult,
-    AnalyzeDocumentRequest,
-    DocumentAnalysisFeature,
+   # AnalyzeDocumentRequest,
+    DocumentAnalysisFeature
 )
 
 from src.config import DI_ENDPOINT, DI_KEY, DI_MODEL
@@ -57,7 +57,7 @@ def analyze_pdf(
     try:
         poller = client.begin_analyze_document(
             model_id=model_id,
-            analyze_request=AnalyzeDocumentRequest(bytes_source=pdf_bytes),
+            body=pdf_bytes,
             features=[DocumentAnalysisFeature.KEY_VALUE_PAIRS],
         )
 
