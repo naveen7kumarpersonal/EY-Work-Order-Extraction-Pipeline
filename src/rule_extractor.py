@@ -108,9 +108,37 @@ def _extract_header(full_text: str, kvps: Dict[str, str]) -> Dict[str, str]:
             or _kvp_get(kvps, "phone", "mobile", "contact no")
             or _find(r'Phone\s*No\.?\s*:-?\s*([\+\d][\d\s\-\(\)]{7,20})', full_text)
     )
+    # Work Location
+    h["Work Location"] = (
+            two_col.get("Location")
+            or _kvp_get(kvps, "location", "place of work", "work location", "site")
+            or _find(
+        r'(?:Location|Work\s+Location|Place\s+of\s+Work|Site)\s*:?[-\s]*([A-Za-z0-9\s,&\-\/]+)',
+        full_text
+    )
+    )
+    # Company / Plant
+    h["Company / Plant"] = (
+        two_col.get("Company")
+        or two_col.get("Plant")
+        or _kvp_get(kvps, "company", "plant", "unit")
+        or _find(r'(?:Company|Plant|Unit|Division|Area|Client)\s*:?[-\s]*([A-Za-z0-9\s,&\-\/]+)', full_text)
+    )
+    # Vendor GSTIN
+    h["Vendor GSTIN"] = (
+        _kvp_get(kvps, "gstin","GSTIN","GST NO")
+        or _find(r'GSTIN\s*:?[-\s]*([0-9A-Z]{15})', full_text)
+    )
+    # Net Value
+    h["Net Value (INR)"] = (
+        _find(r'Net\s+(?:Value|Amount|Basic Value)\s*:?[\s₹]*([\d,]+(?:\.\d+)?)', full_text)
+    )
+    # Tax Amount
+    h["Tax Amount (INR)"] = (
+        _find(r'(?:GST|Tax)\s+(?:Amount|Value)\s*:?[\s₹]*([\d,]+(?:\.\d+)?)', full_text)
+    )
 
-
-    return {k: v for k, v in h.items() if v}
+    return h
 
 
 # ─────────────────────────────────────────────────────────────
